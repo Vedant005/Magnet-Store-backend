@@ -1,7 +1,7 @@
-import { Wishlist } from "../models/wishlist.model";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { Wishlist } from "../models/wishlist.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addToWishlist = asyncHandler(async (req, res) => {
   const { productId, userId } = req.params;

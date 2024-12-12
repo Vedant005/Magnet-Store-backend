@@ -5,7 +5,7 @@ import {
   clearWishlist,
   getWishlistItems,
   removeFromWishlist,
-} from "../controllers/wishlist.controller";
+} from "../controllers/wishlist.controller.js";
 
 const router = Router();
 
