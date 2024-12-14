@@ -18,8 +18,8 @@ router.route("/remove-from-cart").delete(removeFromCart);
 
 router.route("/clear-cart").delete(clearCart);
 
-router.route("/increase-item").delete(increaseItem);
+router.route("/increase-item").post(increaseItem);
 
-router.route("/decrease-item").delete(decreaseItem);
+router.route("/decrease-item").post(decreaseItem);
 
 export default router;
