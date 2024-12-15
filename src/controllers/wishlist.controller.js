@@ -1,3 +1,5 @@
+import { Product } from "../models/product.model.js";
+import { User } from "../models/user.model.js";
 import { Wishlist } from "../models/wishlist.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -14,7 +16,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid product id");
   }
 
-  const product = await Wishlist.findById(productId);
+  const product = await Product.findById(productId);
 
   if (!product) {
     throw new ApiError(500, "Product not found");
@@ -48,7 +50,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, wishlist, "Wishlist created"));
 });
 
-const getWishlistItems = asyncHandler(async (req, res) => {
+const getUserWishlist = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   const wishlist = await Wishlist.findById({ userId });
@@ -121,4 +123,4 @@ const clearWishlist = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Cart cleard!"));
 });
 
-export { addToWishlist, getWishlistItems, removeFromWishlist, clearWishlist };
+export { addToWishlist, getUserWishlist, removeFromWishlist, clearWishlist };
