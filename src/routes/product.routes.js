@@ -9,9 +9,9 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.route("/products").get(getAllProducts);
+router.route("/all-products").get(getAllProducts);
 
-router.route("/products/:productId").get(getSingleProduct);
+router.route("/:productId").get(getSingleProduct);
 
 router.route("/create-product").post(
   upload.fields([

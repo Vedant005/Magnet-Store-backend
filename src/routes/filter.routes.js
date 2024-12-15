@@ -3,6 +3,6 @@ import { filterProducts } from "../controllers/filter.controller.js";
 
 const router = express.Router();
 
-router.get("/apply-filter", filterProducts);
+router.get("/apply/", filterProducts);
 
 export default router;

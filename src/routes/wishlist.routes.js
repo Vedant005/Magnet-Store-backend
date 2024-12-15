@@ -3,18 +3,21 @@ import { Router } from "express";
 import {
   addToWishlist,
   clearWishlist,
-  getWishlistItems,
+  getUserWishlist,
   removeFromWishlist,
 } from "../controllers/wishlist.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/add-wishlist").post(addToWishlist);
+router.use(verifyJWT);
 
-router.route("/get-wishlist-items").get(getWishlistItems);
+router.route("/add/:productId/:userId").post(addToWishlist);
 
-router.route("/remove-from-wishlist").delete(removeFromWishlist);
+router.route("/get/:userId").get(getUserWishlist);
 
-router.route("/clear-wishlist").delete(clearWishlist);
+router.route("/remove/:productId/:userId").delete(removeFromWishlist);
+
+router.route("/clear/:userId").delete(clearWishlist);
 
 export default router;

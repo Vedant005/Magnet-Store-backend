@@ -3,23 +3,26 @@ import {
   addToCart,
   clearCart,
   decreaseItem,
-  getCartItems,
+  getUserCart,
   increaseItem,
   removeFromCart,
 } from "../controllers/cart.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/add-cart").post(addToCart);
+router.use(verifyJWT);
 
-router.route("/get-cart-items").get(getCartItems);
+router.route("/add/:productId").post(addToCart);
 
-router.route("/remove-from-cart").delete(removeFromCart);
+router.route("/get").get(getUserCart);
 
-router.route("/clear-cart").delete(clearCart);
+router.route("/remove/:productId/:userId").delete(removeFromCart);
 
-router.route("/increase-item").post(increaseItem);
+router.route("/clear").delete(clearCart);
 
-router.route("/decrease-item").post(decreaseItem);
+router.route("/increase/:productId/:userId").post(increaseItem);
+
+router.route("/decrease/:productId/:userId").post(decreaseItem);
 
 export default router;
