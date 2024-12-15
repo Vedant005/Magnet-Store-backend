@@ -1,12 +1,12 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { ApiError } from "../utils/ApiError.js";
 
 export const filterProducts = asyncHandler(async (req, res) => {
   const { search, sortBy, priceRange, categoryFilter, ratings } = req.query;
 
   let filterQuery = {};
+  let sortQuery = {};
 
   // Search by product title
   if (search) {
@@ -15,7 +15,8 @@ export const filterProducts = asyncHandler(async (req, res) => {
 
   // Filter by price range
   if (priceRange) {
-    filterQuery.price = { $lte: Number(priceRange) };
+    const [minPrice, maxPrice] = priceRange.split("-").map(Number);
+    filterQuery.price = { $gte: minPrice || 0, $lte: maxPrice || Infinity };
   }
 
   // Filter by categories
@@ -29,23 +30,16 @@ export const filterProducts = asyncHandler(async (req, res) => {
     filterQuery.ratings = { $gte: Number(ratings) };
   }
 
-  // Fetch filtered products
-  let products = await Product.find(filterQuery);
-
-  // Sort products
+  // Sorting logic
   if (sortBy) {
-    switch (sortBy) {
-      case "LTH":
-        products = products.sort((a, b) => a.price - b.price);
-        break;
-      case "HTL":
-        products = products.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        break;
-    }
+    if (sortBy === "LTH") sortQuery.price = 1; // Low to High
+    if (sortBy === "HTL") sortQuery.price = -1; // High to Low
   }
 
+  // Fetch filtered products with sorting
+  const products = await Product.find(filterQuery).sort(sortQuery);
+
+  // Return the response
   return res
     .status(200)
     .json(
