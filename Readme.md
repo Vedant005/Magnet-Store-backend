@@ -1,16 +1,10 @@
 # ** Magnet store backend **
 
----
-
 ## Introduction
-
----
 
 This is a `Ecommerce` backend project with all the functionalities of a ecommerce app such as cart,wishlist,filters user authentication.
 
 ## Features :
-
----
 
 ### 👥 User Management :
 
@@ -48,8 +42,6 @@ This is a `Ecommerce` backend project with all the functionalities of a ecommerc
 
 - Filter by Sort(LTH,HTL),Price range , Categories,Ratings
 
----
-
 ## Technologies Used
 
 - Nodejs
@@ -60,11 +52,7 @@ This is a `Ecommerce` backend project with all the functionalities of a ecommerc
 
 * Cloudinary
 
----
-
 ## Installation and Setup
-
----
 
 1. Clone the repository
 
