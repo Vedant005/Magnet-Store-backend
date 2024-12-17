@@ -12,12 +12,12 @@ const router = Router();
 
 router.use(verifyJWT);
 
-router.route("/add/:productId/:userId").post(addToWishlist);
+router.route("/add/:productId").post(addToWishlist);
 
 router.route("/get/:userId").get(getUserWishlist);
 
-router.route("/remove/:productId/:userId").delete(removeFromWishlist);
+router.route("/remove/:productId").delete(removeFromWishlist);
 
-router.route("/clear/:userId").delete(clearWishlist);
+router.route("/clear").delete(clearWishlist);
 
 export default router;
