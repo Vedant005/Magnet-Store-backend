@@ -9,7 +9,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
-router.route("/all-products").get(getAllProducts);
+router.route("/get").get(getAllProducts);
 
 router.route("/:productId").get(getSingleProduct);
 
