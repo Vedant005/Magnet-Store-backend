@@ -22,7 +22,7 @@ const addToCart = asyncHandler(async (req, res) => {
   let cart = await Cart.findOne({ user: userId });
   console.log(product);
   console.log("Total---->> ", cart.totalAmount + product.price);
-  
+
   if (!cart) {
     cart = new Cart({
       user: userId,
@@ -64,6 +64,7 @@ const addToCart = asyncHandler(async (req, res) => {
 
 const getUserCart = asyncHandler(async (req, res) => {
   const userId = req.user._id;
+  console.log(req);
 
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "User Id invalid");
@@ -130,7 +131,6 @@ const removeFromCart = asyncHandler(async (req, res) => {
 
 const clearCart = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  console.log(userId);
 
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Invlaid user");
