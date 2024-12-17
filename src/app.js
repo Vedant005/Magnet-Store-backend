@@ -8,15 +8,10 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-// app.use((req, res, next) => {
-//   console.log("Request Method:", req.method);
-//   console.log("Request URL:", req.url);
-//   console.log("Request Headers:", req.headers);
-//   console.log("Request Body:", req.body);
-//   next();
-// });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
