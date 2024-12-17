@@ -6,7 +6,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addToWishlist = asyncHandler(async (req, res) => {
-  const { productId, userId } = req.params;
+  const { productId } = req.params;
+
+  const userId = req.user._id;
 
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Invalid user id");
@@ -65,7 +67,9 @@ const getUserWishlist = asyncHandler(async (req, res) => {
 });
 
 const removeFromWishlist = asyncHandler(async (req, res) => {
-  const { productId, userId } = req.params;
+  const { productId } = req.params;
+
+  const userId = req.user._id;
 
   if (!isValidObjectId(productId)) {
     throw new ApiError(400, "Invalid product id");
@@ -99,7 +103,7 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
 });
 
 const clearWishlist = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
 
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "Invlaid user");
