@@ -1,4 +1,4 @@
-# ** Magnet store backend **
+# Magnet store backend
 
 ## Introduction
 
