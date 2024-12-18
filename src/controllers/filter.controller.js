@@ -37,8 +37,11 @@ export const filterProducts = asyncHandler(async (req, res) => {
   }
 
   // Fetch filtered products with sorting
-  const products = await Product.find(filterQuery).sort(sortQuery);
+  let products = await Product.find(filterQuery).sort(sortQuery);
 
+  if (!products) {
+    products = await Product.find();
+  }
   // Return the response
   return res
     .status(200)
