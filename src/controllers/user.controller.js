@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -64,10 +65,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email) {
-    throw new ApiError(400, "Email  Required");
-  }
+  console.log(req.body);
+  // if (!email) {
+  //   throw new ApiError(400, "Email  Required");
+  // }
 
   const user = await User.findOne({ email });
 
@@ -189,7 +190,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     const options = {
-      htttpOnly: true,
+      httpOnly: true,
       secure: true,
     };
 
