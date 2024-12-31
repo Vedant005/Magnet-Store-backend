@@ -14,7 +14,7 @@ router.use(verifyJWT);
 
 router.route("/add/:productId").post(addToWishlist);
 
-router.route("/get/:userId").get(getUserWishlist);
+router.route("/get/").get(getUserWishlist);
 
 router.route("/remove/:productId").delete(removeFromWishlist);
 

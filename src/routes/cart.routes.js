@@ -17,12 +17,12 @@ router.route("/add/:productId").post(addToCart);
 
 router.route("/get").get(getUserCart);
 
-router.route("/remove/:productId/:userId").delete(removeFromCart);
+router.route("/remove/:productId").delete(removeFromCart);
 
 router.route("/clear").delete(clearCart);
 
-router.route("/increase/:productId/:userId").post(increaseItem);
+router.route("/increase/:productId").post(increaseItem);
 
-router.route("/decrease/:productId/:userId").post(decreaseItem);
+router.route("/decrease/:productId").post(decreaseItem);
 
 export default router;
