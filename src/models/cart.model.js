@@ -22,21 +22,17 @@ const cartSchema = new Schema(
         },
       },
     ],
+    preTotalAmount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     totalAmount: {
-      type: String,
+      type: Number,
       required: true,
       default: 0,
     },
   },
   { timestamps: true }
 );
-
-cartSchema.pre("save", function (next) {
-  this.totalAmount = this.items.reduce(
-    (acc, item) => acc + item.quantity * (item.product.price || 0),
-    0
-  );
-  next();
-});
-
 export const Cart = mongoose.model("Cart", cartSchema);
