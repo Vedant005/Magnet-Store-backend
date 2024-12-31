@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Get all addresses for a user
-export const getAllAddresses = asyncHandler(async (req, res) => {
+const getAllAddresses = asyncHandler(async (req, res) => {
   const addresses = await Address.find({ user: req.user._id });
   res
     .status(200)
@@ -12,43 +12,25 @@ export const getAllAddresses = asyncHandler(async (req, res) => {
 });
 
 // Create a new address
-export const createAddress = asyncHandler(async (req, res) => {
-  const {
-    fullName,
-    phoneNumber,
-    addressLine1,
-    addressLine2,
-    city,
-    state,
-    postalCode,
-    country,
-  } = req.body;
+const createAddress = asyncHandler(async (req, res) => {
+  const { street, district, city, state, pinCode, country } = req.body;
 
-  if (
-    ![
-      fullName,
-      phoneNumber,
-      addressLine1,
-      city,
-      state,
-      postalCode,
-      country,
-    ].every(Boolean)
-  ) {
+  if (![street, district, city, state, pinCode, country].every(Boolean)) {
     throw new ApiError(400, "All required fields must be provided");
   }
 
   const address = await Address.create({
     user: req.user._id,
-    fullName,
-    phoneNumber,
-    addressLine1,
-    addressLine2,
+    street,
+    district,
     city,
     state,
-    postalCode,
+    pinCode,
     country,
   });
+  if (!address) {
+    throw new ApiError(500, "Something went wrong while creating address");
+  }
 
   res
     .status(201)
@@ -56,14 +38,23 @@ export const createAddress = asyncHandler(async (req, res) => {
 });
 
 // Update an address
-export const updateAddress = asyncHandler(async (req, res) => {
+const updateAddress = asyncHandler(async (req, res) => {
   const { addressId } = req.params;
-  const updates = req.body;
+  const { street, district, city, state, pinCode, country } = req.body;
 
-  const address = await Address.findOneAndUpdate(
+  const address = await Address.findByAndUpdate(
     { _id: addressId, user: req.user._id },
-    updates,
-    { new: true, runValidators: true }
+    {
+      $set: {
+        street: street,
+        district: district,
+        city: city,
+        state: state,
+        pinCode: pinCode,
+        country: country,
+      },
+    },
+    { new: true }
   );
 
   if (!address) {
@@ -76,7 +67,7 @@ export const updateAddress = asyncHandler(async (req, res) => {
 });
 
 // Delete an address
-export const deleteAddress = asyncHandler(async (req, res) => {
+const deleteAddress = asyncHandler(async (req, res) => {
   const { addressId } = req.params;
 
   const address = await Address.findOneAndDelete({
@@ -88,3 +79,5 @@ export const deleteAddress = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, address, "Address deleted successfully"));
 });
+
+export { getAllAddresses, createAddress, updateAddress, deleteAddress };
