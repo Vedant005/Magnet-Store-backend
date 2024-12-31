@@ -1,3 +1,4 @@
+import mongoose, { isValidObjectId } from "mongoose";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
 import { Wishlist } from "../models/wishlist.model.js";
@@ -24,21 +25,31 @@ const addToWishlist = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Product not found");
   }
 
-  const wishlist = await Wishlist.findOne({ userId });
+  let wishlist = await Wishlist.findOne({ user: userId });
 
   if (wishlist) {
     // const productIndex = wishlist.items.findIndex(
     //   (item) => item.product.toString() === productId
     // );
+    const productInList = wishlist.items.find(
+      (item) => item.product.toString() === productId
+    );
+
+    if (productInList) {
+      // If product already exists in cart, respond without altering totalAmount
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(200, wishlist, "Product already exists in wishlist")
+        );
+    }
 
     wishlist.items.push({
       product: productId,
     });
-
-    await wishlist.save();
   } else {
     wishlist = await Wishlist.create({
-      userId,
+      user: userId,
       items: [
         {
           product: productId,
@@ -47,23 +58,97 @@ const addToWishlist = asyncHandler(async (req, res) => {
     });
   }
 
+  await wishlist.save();
+
+  const enrichedList = await Wishlist.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $unwind: "$items",
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.product",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    { $unwind: "$productDetails" },
+    {
+      $group: {
+        _id: "$_id",
+        user: { $first: "$user" },
+        items: {
+          $push: {
+            _id: "$items.product",
+            title: "$productDetails.price",
+            price: "$productDetails.price",
+            ratings: "$productDetails.ratings",
+            img: "$productDetails.img",
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!enrichedList || enrichedList.length === 0) {
+    throw new ApiError(404, "Cart not found");
+  }
+
   return res
     .status(201)
-    .json(new ApiResponse(200, wishlist, "Wishlist created"));
+    .json(new ApiResponse(200, enrichedList[0], "Wishlist created"));
 });
 
 const getUserWishlist = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.user._id;
 
-  const wishlist = await Wishlist.findById({ userId });
+  const enrichedList = await Wishlist.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $unwind: "$items",
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.product",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    { $unwind: "$productDetails" },
+    {
+      $group: {
+        _id: "$_id",
+        user: { $first: "$user" },
+        items: {
+          $push: {
+            _id: "$items.product",
+            title: "$productDetails.price",
+            price: "$productDetails.price",
+            ratings: "$productDetails.ratings",
+            img: "$productDetails.img",
+          },
+        },
+      },
+    },
+  ]);
 
-  if (!wishlist) {
-    throw new ApiResponse(201, "Cart is empty");
+  if (!enrichedList || enrichedList.length === 0) {
+    throw new ApiError(404, "Cart not found");
   }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, wishlist, "Wishlist Fetched"));
+    .json(new ApiResponse(200, enrichedList[0], "Wishlist Fetched"));
 });
 
 const removeFromWishlist = asyncHandler(async (req, res) => {
@@ -76,30 +161,88 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
   }
 
   if (!isValidObjectId(userId)) {
-    throw new ApiError(400, "Invalid product id");
+    throw new ApiError(400, "Invalid user id");
   }
 
-  const product = await Product.findOne(productId);
+  const product = await Product.findById(productId);
 
   if (!product) {
     throw new ApiError(400, "Product not found");
   }
 
-  const resultWishlist = await Wishlist.findByIdAndDelete(
-    userId,
-    {
-      $pull: {
-        product: productId,
-      },
-    },
-    { new: true }
-  );
-
-  if (!resultWishlist) {
-    throw new ApiError(400, "Item could not be removed from wishlist");
+  const wishlist = await Wishlist.findOne({ user: userId });
+  if (!wishlist) {
+    throw new ApiError(404, "Wishlist not found");
   }
 
-  return res.status(200).json(new ApiResponse(200, "Item removed"));
+  const itemIndex = wishlist.items.findIndex(
+    (item) => item.product.toString() === productId
+  );
+
+  if (itemIndex === -1) {
+    throw new ApiError(404, "Product not found in wishlist");
+  }
+
+  // Calculate the total amount to deduct
+  // const itemToRemove = wishlist.items[itemIndex];
+  // const resultWishlist = await Wishlist.findByIdAndDelete(
+  //   userId,
+  //   {
+  //     $pull: {
+  //       product: productId,
+  //     },
+  //   },
+  //   { new: true }
+  // );
+
+  // if (!resultWishlist) {
+  //   throw new ApiError(400, "Item could not be removed from wishlist");
+  // }
+  wishlist.items.splice(itemIndex, 1);
+  await wishlist.save();
+
+  const enrichedList = await Wishlist.aggregate([
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $unwind: "$items",
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.product",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    { $unwind: "$productDetails" },
+    {
+      $group: {
+        _id: "$_id",
+        user: { $first: "$user" },
+        items: {
+          $push: {
+            _id: "$items.product",
+            title: "$productDetails.price",
+            price: "$productDetails.price",
+            ratings: "$productDetails.ratings",
+            img: "$productDetails.img",
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!enrichedList) {
+    throw new ApiError(404, "Wishlist not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, enrichedList[0], "Item removed"));
 });
 
 const clearWishlist = asyncHandler(async (req, res) => {
@@ -109,13 +252,13 @@ const clearWishlist = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invlaid user");
   }
 
-  const user = await User.findOne({ userId });
+  const user = await User.findOne(userId);
 
   if (!user) {
     throw new ApiError(400, "User does not exist");
   }
 
-  const wishlist = await Wishlist.findOne({ userId });
+  const wishlist = await Wishlist.findOne({ user: userId });
 
   if (!wishlist) {
     throw new ApiError(404, "Wishlist does not exist for this user");
