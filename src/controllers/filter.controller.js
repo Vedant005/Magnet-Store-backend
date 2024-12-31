@@ -21,7 +21,9 @@ export const filterProducts = asyncHandler(async (req, res) => {
 
   // Filter by categories
   if (categoryFilter) {
-    const categories = categoryFilter.split(",");
+    const categories = Array.isArray(categoryFilter)
+      ? categoryFilter
+      : categoryFilter.split(",");
     filterQuery.categoryName = { $in: categories };
   }
 
@@ -42,6 +44,7 @@ export const filterProducts = asyncHandler(async (req, res) => {
   if (!products) {
     products = await Product.find();
   }
+
   // Return the response
   return res
     .status(200)
