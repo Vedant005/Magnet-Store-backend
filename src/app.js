@@ -25,11 +25,13 @@ import productRouter from "./routes/product.routes.js";
 import cartRouter from "./routes/cart.routes.js";
 import wishlistRouter from "./routes/wishlist.routes.js";
 import filterRouter from "./routes/filter.routes.js";
+import addressRouter from "./routes/address.routes.js";
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/filter", filterRouter);
+app.use("/api/v1/address", addressRouter);
 
 export { app };
