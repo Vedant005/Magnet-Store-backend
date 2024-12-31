@@ -17,19 +17,19 @@ const productSchema = new Schema(
       type: String,
     },
     price: {
-      type: String,
+      type: Number,
     },
     discount: {
-      type: String,
+      type: Number,
     },
     ratings: {
-      type: String,
+      type: Number,
       default: 0,
       min: 0,
       max: 5,
     },
     quantity: {
-      type: String,
+      type: Number,
 
       min: 0,
     },
