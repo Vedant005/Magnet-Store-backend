@@ -65,10 +65,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  console.log(req.body);
-  // if (!email) {
-  //   throw new ApiError(400, "Email  Required");
-  // }
 
   const user = await User.findOne({ email });
 
@@ -115,7 +111,6 @@ const logoutUser = asyncHandler(async (req, res) => {
     userId,
     {
       $unset: {
-        //set :{refreshToken:undefined}
         refreshToken: 1, // this removes the field from document
       },
     },
@@ -168,8 +163,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-
-  console.log(userId);
 
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
