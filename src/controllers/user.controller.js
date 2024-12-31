@@ -167,6 +167,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  console.log(userId);
+
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
   if (!incomingRefreshToken) {
