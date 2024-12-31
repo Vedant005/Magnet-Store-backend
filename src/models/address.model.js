@@ -7,22 +7,12 @@ const addressSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    fullName: {
+    street: {
       type: String,
       required: true,
       trim: true,
     },
-    phoneNumber: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    addressLine1: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    addressLine2: {
+    district: {
       type: String,
       trim: true,
     },
@@ -36,7 +26,7 @@ const addressSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    postalCode: {
+    pinCode: {
       type: String,
       required: true,
       trim: true,
