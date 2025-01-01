@@ -40,11 +40,9 @@ export const filterProducts = asyncHandler(async (req, res) => {
 
   // Fetch filtered products with sorting
   let products = await Product.find(filterQuery).sort(sortQuery);
-  console.log("first ", products);
 
   if (products.length == 0) {
     products = await Product.find();
-    console.log(products);
   }
 
   // Return the response
