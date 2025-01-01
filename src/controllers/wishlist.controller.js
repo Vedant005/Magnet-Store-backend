@@ -28,9 +28,6 @@ const addToWishlist = asyncHandler(async (req, res) => {
   let wishlist = await Wishlist.findOne({ user: userId });
 
   if (wishlist) {
-    // const productIndex = wishlist.items.findIndex(
-    //   (item) => item.product.toString() === productId
-    // );
     const productInList = wishlist.items.find(
       (item) => item.product.toString() === productId
     );
@@ -183,21 +180,6 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Product not found in wishlist");
   }
 
-  // Calculate the total amount to deduct
-  // const itemToRemove = wishlist.items[itemIndex];
-  // const resultWishlist = await Wishlist.findByIdAndDelete(
-  //   userId,
-  //   {
-  //     $pull: {
-  //       product: productId,
-  //     },
-  //   },
-  //   { new: true }
-  // );
-
-  // if (!resultWishlist) {
-  //   throw new ApiError(400, "Item could not be removed from wishlist");
-  // }
   wishlist.items.splice(itemIndex, 1);
   await wishlist.save();
 
