@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    const dbName = process.env.DB_NAME; // Retrieve DB_NAME from environment variables
+    const dbName = process.env.DB_NAME;
     if (!dbName) {
       throw new Error("DB_NAME environment variable is not defined.");
     }
