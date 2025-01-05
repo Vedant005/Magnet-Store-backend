@@ -47,9 +47,6 @@ const createProduct = asyncHandler(async (req, res) => {
     description,
   } = req.body;
 
-  // Log the received data
-  // console.log("Request Body:", req.body);
-
   let imageLocalPath;
 
   if (req.files && Array.isArray(req.files.img) && req.files.img.length > 0) {
