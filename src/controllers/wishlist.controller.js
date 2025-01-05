@@ -91,7 +91,7 @@ const toggleWishlist = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!enrichedList || enrichedList.length === 0) {
+  if (!enrichedList) {
     throw new ApiError(404, "Wishlist not found");
   }
 
@@ -142,8 +142,8 @@ const getUserWishlist = asyncHandler(async (req, res) => {
     },
   ]);
 
-  if (!enrichedList || enrichedList.length === 0) {
-    throw new ApiError(404, "Cart not found");
+  if (!enrichedList) {
+    throw new ApiError(404, "Wishlist not found");
   }
 
   return res
