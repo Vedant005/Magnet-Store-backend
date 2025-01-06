@@ -7,36 +7,43 @@ import jwt from "jsonwebtoken";
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
 
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
-
     await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(
-      500,
-      "Something went wronf while generating refresh and access token"
-    );
+    throw new ApiError(500, "Something went wrong while generating tokens");
   }
 };
 
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, phoneNumber, password } = req.body;
 
+  // Validate required fields
   if (
-    [fullName, email, phoneNumber, password].some(
-      (field) => field?.trim() === ""
-    )
+    !fullName?.trim() ||
+    !email?.trim() ||
+    !phoneNumber?.trim() ||
+    !password?.trim()
   ) {
     throw new ApiError(400, "All fields are required");
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
   const existedUser = await User.findOne({
-    $or: [{ email, phoneNumber }],
+    $or: [{ email }, { phoneNumber }],
   });
 
   if (existedUser) {
@@ -45,7 +52,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     fullName,
-    email,
+    email: email.toLowerCase(),
     phoneNumber,
     password,
   });
@@ -55,18 +62,28 @@ const registerUser = asyncHandler(async (req, res) => {
   );
 
   if (!createdUser) {
-    throw new ApiError(500, "Something went wrong while signing up");
+    throw new ApiError(500, "Something went wrong while registering user");
   }
 
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
+    .json(
+      new ApiResponse(
+        201,
+        { user: createdUser },
+        "User registered successfully. Please login to continue."
+      )
+    );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  if (!email?.trim() || !password?.trim()) {
+    throw new ApiError(400, "Email and password are required");
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase() });
 
   if (!user) {
     throw new ApiError(404, "User does not exist");
@@ -75,7 +92,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials");
+    throw new ApiError(401, "Invalid credentials");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -89,6 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: true,
+    sameSite: "strict",
   };
 
   return res
@@ -99,73 +117,78 @@ const loginUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { user: loggedInUser, accessToken, refreshToken },
-        "User Logged In Successfully"
+        "User logged in successfully"
       )
     );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  try {
+    // Get token from cookies or Authorization header
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
 
-  await User.findByIdAndUpdate(
-    userId,
-    {
-      $unset: {
-        refreshToken: 1, // this removes the field from document
-      },
-    },
-    {
-      new: true,
+    if (!token) {
+      // If no token, just clear cookies and return success
+      const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      };
+
+      return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "Logged out successfully"));
     }
-  );
-  const options = {
-    htttpOnly: true,
-    secure: true,
-  };
-  return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged Out"));
-});
 
-const getCurrentUser = asyncHandler(async (req, res) => {
-  return res
-    .status(200)
-    .json(new ApiResponse(200, req.user, "User fetched successfully"));
-});
+    // If token exists, try to find and update user
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email, phoneNumber } = req.body;
+    if (decodedToken?._id) {
+      await User.findByIdAndUpdate(
+        decodedToken._id,
+        {
+          $unset: { refreshToken: 1 },
+        },
+        { new: true }
+      );
+    }
 
-  if (!fullName || !email || !phoneNumber) {
-    throw new ApiError(400, "All fields are required");
+    const options = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    };
+
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "Logged out successfully"));
+  } catch (error) {
+    // Even if token verification fails, clear cookies
+    const options = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    };
+
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(new ApiResponse(200, {}, "Logged out successfully"));
   }
-
-  const user = await User.findByIdAndUpdate(
-    req.user?.id,
-    {
-      $set: {
-        fullName,
-        email: email,
-        phoneNumber: phoneNumber,
-      },
-    },
-    {
-      new: true,
-    }
-  ).select("-password");
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"));
 });
-
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
+
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "unauthorized request");
+    throw new ApiError(401, "Refresh token is required");
   }
 
   try {
@@ -181,16 +204,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, "Refresh token is expired or used");
+      throw new ApiError(401, "Refresh token is expired or invalid");
     }
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshToken(user._id);
 
     const options = {
       httpOnly: true,
       secure: true,
+      sameSite: "strict",
     };
-
-    const { accessToken, newRefreshToken } =
-      await generateAccessAndRefreshToken(user._id);
 
     return res
       .status(200)
@@ -200,12 +224,70 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           { accessToken, refreshToken: newRefreshToken },
-          "Access token refreshed"
+          "Access token refreshed successfully"
         )
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User fetched successfully"));
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullName, email, phoneNumber } = req.body;
+
+  if (!fullName?.trim() || !email?.trim() || !phoneNumber?.trim()) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new ApiError(400, "Invalid email format");
+  }
+
+  // Check if email/phone is already taken by another user
+  const existingUser = await User.findOne({
+    $and: [
+      { _id: { $ne: req.user._id } },
+      { $or: [{ email }, { phoneNumber }] },
+    ],
+  });
+
+  if (existingUser) {
+    throw new ApiError(409, "Email or phone number already in use");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        fullName,
+        email: email.toLowerCase(),
+        phoneNumber,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"));
 });
 
 export {

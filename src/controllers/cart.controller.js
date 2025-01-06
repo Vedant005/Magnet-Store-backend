@@ -127,7 +127,6 @@ const addToCart = asyncHandler(async (req, res) => {
 
 const getUserCart = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  console.log(userId);
 
   if (!isValidObjectId(userId)) {
     throw new ApiError(400, "User Id invalid");
