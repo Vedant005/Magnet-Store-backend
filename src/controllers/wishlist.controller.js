@@ -132,9 +132,11 @@ const getUserWishlist = asyncHandler(async (req, res) => {
         items: {
           $push: {
             _id: "$items.product",
-            title: "$productDetails.price",
+            title: "$productDetails.title",
             price: "$productDetails.price",
             ratings: "$productDetails.ratings",
+            brandName: "$productDetails.brandName",
+            discount: "$productDetails.discount",
             img: "$productDetails.img",
           },
         },
