@@ -408,7 +408,7 @@ const decreaseItem = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid product id");
   }
 
-  const cart = await Cart.findOne({ userId });
+  const cart = await Cart.findOne({ user: userId });
 
   if (!cart) {
     throw new ApiError(400, "Cart items not found");
