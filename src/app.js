@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import cron from "cron";
+import cron from "node-cron";
+
 import axios from "axios";
 
 const app = express();
