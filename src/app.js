@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-cron.schedule("*/22 * * * *", async () => {
+cron.schedule("*/14 * * * *", async () => {
   try {
     const response = await axios.get(`${process.env.BACKEND_URL}/health`);
     console.log(`Health check response: ${response.status}`);
