@@ -107,7 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none", // Required for cross-origin cookies
-    path: "/", // Ensure the cookie is available globally
+    path: "/",
   };
 
   return res
@@ -185,7 +185,11 @@ const logoutUser = asyncHandler(async (req, res) => {
       .json(new ApiResponse(200, {}, "Logged out successfully"));
   }
 });
+
 const refreshAccessToken = asyncHandler(async (req, res) => {
+  console.log(req.cookies);
+  console.log(req.body);
+
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
