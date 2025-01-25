@@ -8,6 +8,7 @@ import {
   removeFromCart,
 } from "../controllers/cart.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+// import { } from "../middlewares/middleware.js";
 
 const router = Router();
 
