@@ -107,13 +107,22 @@ const loginUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none", // Required for cross-origin cookies
+    maxAge: 5 * 60 * 1000,
+    path: "/",
+  };
+
+  const options2 = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none", // Required for cross-origin cookies
+    maxAge: 10 * 24 * 60 * 60 * 1000,
     path: "/",
   };
 
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("refreshToken", refreshToken, options2)
     .json(
       new ApiResponse(
         200,
@@ -187,43 +196,68 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
+  const incomingRefreshToken = req.cookies.refreshToken;
+  const existingAccessToken = req.cookies.accessToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Refresh token is required");
   }
 
   try {
-    const decodedToken = jwt.verify(
+    // Validate the refresh token
+    const decodedRefreshToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken?._id);
+    const user = await User.findById(decodedRefreshToken?._id);
 
-    if (!user) {
-      throw new ApiError(401, "Invalid refresh token");
-    }
-
-    if (incomingRefreshToken !== user?.refreshToken) {
+    if (!user || incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired or invalid");
     }
 
+    // Optional: Check if the access token is still valid
+    if (existingAccessToken) {
+      try {
+        jwt.verify(existingAccessToken, process.env.ACCESS_TOKEN_SECRET);
+        return res
+          .status(200)
+          .json(new ApiResponse(200, null, "Access token is still valid"));
+      } catch (err) {
+        // If access token is invalid, proceed to generate a new one
+        console.log("Access token expired, generating a new one...");
+      }
+    }
+
+    // Generate new tokens
     const { accessToken, refreshToken: newRefreshToken } =
       await generateAccessAndRefreshToken(user._id);
 
+    // Update the user's refresh token in the database
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    // Set new tokens in cookies
     const options = {
       httpOnly: true,
       secure: true,
-      sameSite: "none", // Required for cross-origin cookies
+      sameSite: "none", // For cross-origin cookies
+      maxAge: 5 * 60 * 1000,
       path: "/", // Ensure the cookie is available globally
+    };
+
+    const options2 = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none", // Required for cross-origin cookies
+      maxAge: 10 * 24 * 60 * 60 * 1000,
+      path: "/",
     };
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
+      .cookie("refreshToken", newRefreshToken, options2)
       .json(
         new ApiResponse(
           200,
